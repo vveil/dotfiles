@@ -1,6 +1,6 @@
 [submodule "root/dot_config/external_nvim"]
 	path = root/dot_config/external_nvim
-	url = git@github.com:vveil/kickstart.nvim.git
+	url = git@github.com:vveil/kickstart.nvim
 	branch = master
 [submodule "root/dot_tmux/plugins/external_tpm"]
 	path = root/dot_tmux/plugins/external_tpm
