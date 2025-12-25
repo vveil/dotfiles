@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# --- Configuration ---
+NVIM_REPO_URL="https://github.com/neovim/neovim"
+NVIM_INSTALL_PREFIX="/usr/local"
+NVIM_VERSION_MIN="0.11"
+
+# --- Helper Functions ---
+log() {
+    echo "[dotfiles] $1"
+}
+
+error() {
+    echo "[dotfiles] ERROR: $1" >&2
+    exit 1
+}
+
+version_gte() {
+    printf '%s\n%s\n' "$2" "$1" | sort -V -C
+}
+
+check_nvim_version() {
+    if ! command -v nvim &> /dev/null; then
+        echo "not installed"
+        return 1
+    fi
+
+    local version
+    version=$(nvim --version 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+')
+
+    if [[ -z "$version" ]]; then
+        echo "unknown"
+        return 1
+    fi
+
+    echo "$version"
+
+    if version_gte "$version" "$NVIM_VERSION_MIN"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+install_neovim_from_source() {
+    log "Installing Neovim from source (current: $(check_nvim_version))"
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew install cmake ninja luajit
+    else
+        sudo apt-get update
+        sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            libtool \
+            gettext \
+            libncurses-dev \
+            luajit \
+            unzip
+    fi
+
+    local build_dir="$HOME/.cache/nvim-build"
+    mkdir -p "$build_dir"
+    cd "$build_dir"
+
+    if [[ ! -d "neovim" ]]; then
+        git clone --depth 1 --branch stable "$NVIM_REPO_URL"
+    fi
+
+    cd neovim
+    make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX="$NVIM_INSTALL_PREFIX"
+    sudo make install
+
+    cd ~/dotfiles
+    log "Neovim installed successfully"
+}
+
+create_config_dirs() {
+    log "Creating config directories..."
+    mkdir -p ~/.config/nvim
+    mkdir -p ~/.config/tmux
+}
+
+setup_dotfiles() {
+    if [[ ! -f "dotbot/bin/dotbot" ]]; then
+        git submodule update --init --recursive
+    fi
+    ./dotbot/bin/dotbot -c install.conf.yaml
+}
+
+# --- Main ---
+main() {
+    log "Starting dotfiles setup..."
+
+    create_config_dirs
+
+    if check_nvim_version; then
+        log "Neovim $(check_nvim_version) is installed and up to date"
+    else
+        install_neovim_from_source
+    fi
+
+    setup_dotfiles
+    log "Setup complete!"
+}
+
+main "$@"
