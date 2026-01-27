@@ -6,6 +6,9 @@ set -euo pipefail
 NVIM_REPO_URL="https://github.com/neovim/neovim"
 NVIM_INSTALL_PREFIX="/usr/local"
 NVIM_VERSION_MIN="0.11"
+DEVCONFIG_REPO_URL="git@gitlab.damp.local:niklas.werner/devconfig.git"
+DOTFILES_CONFIG_DIR="$HOME/.config/dotfiles"
+CONFIG_MODE=""
 
 # --- Helper Functions ---
 log() {
@@ -19,6 +22,44 @@ error() {
 
 version_gte() {
     printf '%s\n%s\n' "$2" "$1" | sort -V -C
+}
+
+load_config_mode() {
+    if [[ -f "$DOTFILES_CONFIG_DIR/mode" ]]; then
+        CONFIG_MODE=$(cat "$DOTFILES_CONFIG_DIR/mode")
+        return 0
+    fi
+    return 1
+}
+
+save_config_mode() {
+    mkdir -p "$DOTFILES_CONFIG_DIR"
+    echo "$CONFIG_MODE" > "$DOTFILES_CONFIG_DIR/mode"
+}
+
+prompt_config_mode() {
+    echo
+    echo "Is this a personal or work device?"
+    echo "  [1] Personal"
+    echo "  [2] Work"
+    echo -n "> "
+    read -r choice
+
+    case "$choice" in
+        1|"")
+            CONFIG_MODE="personal"
+            ;;
+        2)
+            CONFIG_MODE="work"
+            ;;
+        *)
+            echo "Invalid choice. Defaulting to personal."
+            CONFIG_MODE="personal"
+            ;;
+    esac
+
+    save_config_mode
+    log "Mode set to: $CONFIG_MODE"
 }
 
 check_nvim_version() {
@@ -91,8 +132,63 @@ setup_dotfiles() {
     ./dotbot/bin/dotbot -c install.conf.yaml
 }
 
+setup_devconfig() {
+    if [[ "$CONFIG_MODE" != "work" ]]; then
+        return 0
+    fi
+
+    local devconfig_dir="$HOME/devconfig"
+
+    if [[ -d "$devconfig_dir/.git" ]]; then
+        log "Updating devconfig..."
+        git -C "$devconfig_dir" pull
+    else
+        log "Cloning devconfig (work mode)..."
+        git clone "$DEVCONFIG_REPO_URL" "$devconfig_dir"
+    fi
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --work)
+                CONFIG_MODE="work"
+                shift
+                ;;
+            --personal)
+                CONFIG_MODE="personal"
+                shift
+                ;;
+            --help|-h)
+                echo "Usage: $0 [OPTIONS]"
+                echo "Options:"
+                echo "  --work       Set device mode to work"
+                echo "  --personal   Set device mode to personal"
+                echo "  --help       Show this help message"
+                exit 0
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+}
+
 # --- Main ---
 main() {
+    parse_args "$@"
+
+    if [[ -z "$CONFIG_MODE" ]]; then
+        if ! load_config_mode; then
+            prompt_config_mode
+        else
+            log "Loaded mode: $CONFIG_MODE"
+        fi
+    else
+        save_config_mode
+        log "Mode set to: $CONFIG_MODE"
+    fi
+
     log "Starting dotfiles setup..."
 
     create_config_dirs
@@ -103,6 +199,7 @@ main() {
         install_neovim_from_source
     fi
 
+    setup_devconfig
     setup_dotfiles
     log "Setup complete!"
 }

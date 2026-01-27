@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  dotfiles-test:
+    image: ubuntu:24.04
+    working_dir: /root
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/root/dotfiles
+    command: >
+      bash -c "git config --global user.name 'niklas.werner' &&
+               git config --global user.email 'git@niklas.ai' &&
+               bash"

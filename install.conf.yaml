@@ -6,6 +6,10 @@
 - clean: ['~']
 
 - link:
+    ~/.zshenv: zsh/zshenv
+    ~/.config/zsh/.zshrc: zsh/.zshrc
+    ~/.config/zsh/.zsh_plugins.txt: zsh/.zsh_plugins.txt
+    ~/.config/zsh/.zshrc.d/: zsh/.zshrc.d/
     ~/.config/nvim: nvim/.config/nvim
     ~/.tmux.conf: tmux/.tmux/.tmux.conf
     ~/.tmux.conf.local: tmux/tmux.conf.local
