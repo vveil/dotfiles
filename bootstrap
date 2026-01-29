@@ -119,10 +119,57 @@ install_neovim_from_source() {
     log "Neovim installed successfully"
 }
 
+install_brew() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+}
+
 create_config_dirs() {
     log "Creating config directories..."
     mkdir -p ~/.config/nvim
     mkdir -p ~/.config/tmux
+}
+
+setup_atuin() {
+    if command -v atuin &> /dev/null; then
+        log "atuin already installed..."
+        return 0
+    fi
+
+    mise use -g atuin@latest
+}
+
+setup_rust() {
+    if command -v cargo &> /dev/null; then
+	log "rust already installed..."
+	return 0
+    fi
+
+    mise use -g rust
+}
+
+setup_zsh() {
+    if command -v zsh &> /dev/null; then
+        log "zsh already installed..."
+        return 0
+    fi
+
+    if [[ "$(uname)" == "Darwin" ]]; then
+        brew install zsh
+    else
+        sudo apt-get update
+        sudo apt-get install -y zsh
+    fi
+}
+
+setup_mise() {
+    if command -v mise &> /dev/null; then
+        log "mise already installed..."
+        return 0
+    fi
+
+    curl https://mise.run | sh
 }
 
 setup_dotfiles() {
@@ -191,6 +238,7 @@ main() {
 
     log "Starting dotfiles setup..."
 
+    install_brew
     create_config_dirs
 
     if check_nvim_version; then
@@ -199,6 +247,10 @@ main() {
         install_neovim_from_source
     fi
 
+    setup_mise
+    setup_atuin
+    setup_rust
+    setup_zsh
     setup_devconfig
     setup_dotfiles
     log "Setup complete!"
