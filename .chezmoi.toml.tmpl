@@ -1,0 +1,39 @@
+{{- $profile := promptChoiceOnce . "profile" "Machine profile" (list "personal" "work") -}}
+{{- $gitName := promptStringOnce . "gitName" "Git author name" -}}
+{{- $gitEmail := promptStringOnce . "gitEmail" "Git author email for this profile" -}}
+{{- $roles := list "server" "desktop" "container" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{- $roles = list "desktop" "server" "container" -}}
+{{- end -}}
+{{- $role := promptChoiceOnce . "role" "Machine role" $roles -}}
+{{- $useOnePassword := false -}}
+{{- $jiraTokenRef := "" -}}
+{{- $hfTokenRef := "" -}}
+{{- $deployKeyRef := "" -}}
+{{- if eq $profile "work" -}}
+{{- $useOnePassword = promptBoolOnce . "useOnePassword" "Load work shell secrets from 1Password" -}}
+{{- if $useOnePassword -}}
+{{- $jiraTokenRef = promptStringOnce . "jiraTokenRef" "1Password reference for the Jira token (op://...)" -}}
+{{- $hfTokenRef = promptStringOnce . "hfTokenRef" "1Password reference for the Hugging Face token (op://..., blank to omit)" -}}
+{{- $deployKeyRef = promptStringOnce . "deployKeyRef" "1Password reference for the devconfig SSH deploy key (op://...)" -}}
+{{- end -}}
+{{- end -}}
+
+[data]
+    profile = {{ $profile | quote }}
+    role = {{ $role | quote }}
+    gitName = {{ $gitName | quote }}
+    gitEmail = {{ $gitEmail | quote }}
+    useOnePassword = {{ $useOnePassword }}
+    jiraTokenRef = {{ $jiraTokenRef | quote }}
+    hfTokenRef = {{ $hfTokenRef | quote }}
+    deployKeyRef = {{ $deployKeyRef | quote }}
+{{- if eq .chezmoi.os "linux" }}
+    distro = {{ .chezmoi.osRelease.id | quote }}
+{{- else }}
+    distro = ""
+{{- end }}
+
+[onepassword]
+    mode = "account"
+    prompt = false

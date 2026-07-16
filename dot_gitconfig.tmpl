@@ -1,0 +1,24 @@
+[user]
+    name = {{ .gitName | quote }}
+    email = {{ .gitEmail | quote }}
+[core]
+    editor = nvim
+    pager = delta
+[push]
+    default = simple
+[pull]
+    rebase = true
+[fetch]
+    prune = true
+[init]
+    defaultBranch = main
+[interactive]
+    diffFilter = delta --color-only
+[delta]
+    navigate = true
+    dark = true
+    side-by-side = true
+[merge]
+    conflictStyle = zdiff3
+[alias]
+    gone = "!f() { git fetch --all --prune; git branch -vv | awk '/: gone]/{print $1}' | xargs git branch -D; }; f"

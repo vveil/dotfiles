@@ -1,0 +1,9 @@
+[".config/zsh/.antidote"]
+    type = "git-repo"
+    url = "https://github.com/mattmc3/antidote.git"
+    refreshPeriod = "168h"
+
+[".config/tmux/tmux.conf"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/gpakosz/.tmux/master/.tmux.conf"
+    refreshPeriod = "168h"

@@ -1,0 +1,9 @@
+{{ if and (eq .chezmoi.os "linux") (ne .role "container") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+zsh_path="$(command -v zsh)"
+if [[ "${SHELL:-}" != "$zsh_path" ]]; then
+    chsh -s "$zsh_path"
+fi
+{{ end -}}

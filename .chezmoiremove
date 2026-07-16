@@ -1,0 +1,11 @@
+{{- if or (ne .profile "work") (not .useOnePassword) }}
+.config/zsh/.work-secrets.zsh
+.ssh/devconfig
+{{- end }}
+
+# Remove files from the previous monolithic Neovim configuration while
+# preserving the active config's nested .git directory and runtime state.
+.config/nvim/lua/custom/keymaps.lua
+.config/nvim/lua/custom/plugins
+.config/nvim/lua/custom/telescope
+.config/nvim/lua/kickstart/plugins

@@ -1,0 +1,18 @@
+# Interactive shell setup. Detailed configuration lives in .zshrc.d.
+ZFUNCDIR="$ZDOTDIR/.zfunctions"
+if [[ -d "$ZFUNCDIR" ]]; then
+  fpath=("$ZFUNCDIR" $fpath)
+  autoload -Uz "$ZFUNCDIR"/*(N.:t)
+fi
+
+[[ -r "$ZDOTDIR/.zstyles" ]] && source "$ZDOTDIR/.zstyles"
+
+if [[ -r "$ZDOTDIR/.antidote/antidote.zsh" ]]; then
+  source "$ZDOTDIR/.antidote/antidote.zsh"
+  antidote load "$ZDOTDIR/.zsh_plugins.txt"
+fi
+
+for _rc in "$ZDOTDIR"/.zshrc.d/*.zsh(N); do
+  source "$_rc"
+done
+unset _rc ZFUNCDIR

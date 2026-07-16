@@ -1,0 +1,34 @@
+# Repository-only files.
+bootstrap
+
+README.md
+.github/**
+.config/nvim/.github/**
+{{- if ne .profile "work" }}
+.ssh/config
+{{- end }}
+
+{{- if ne .chezmoi.os "darwin" }}
+.config/zsh/.zshrc.d/50-darwin.zsh
+{{- end }}
+{{- if ne .chezmoi.os "linux" }}
+.config/zsh/.zshrc.d/50-linux.zsh
+.config/zsh/.zshrc.d/55-ubuntu.zsh
+.config/zsh/.zshrc.d/55-fedora.zsh
+{{- else }}
+{{- if ne .distro "ubuntu" }}
+.config/zsh/.zshrc.d/55-ubuntu.zsh
+{{- end }}
+{{- if ne .distro "fedora" }}
+.config/zsh/.zshrc.d/55-fedora.zsh
+{{- end }}
+{{- end }}
+{{- if ne .profile "work" }}
+.config/zsh/.zshrc.d/60-work.zsh
+.config/zsh/.work-secrets.zsh
+{{- else }}
+.config/zsh/.zshrc.d/60-personal.zsh
+{{- if not .useOnePassword }}
+.config/zsh/.work-secrets.zsh
+{{- end }}
+{{- end }}

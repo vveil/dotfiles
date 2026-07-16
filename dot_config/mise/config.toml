@@ -1,0 +1,9 @@
+[tools]
+atuin = "latest"
+delta = "latest"
+go = "latest"
+neovim = "latest"
+node = "lts"
+python = "3.11"
+rust = "stable"
+zoxide = "latest"

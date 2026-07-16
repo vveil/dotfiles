@@ -1,0 +1,55 @@
+{{ if eq .profile "work" -}}
+#!/usr/bin/env bash
+set -u
+
+log() {
+    printf '[dotfiles] %s\n' "$*"
+}
+
+{{ if .useOnePassword -}}
+if ! command -v op >/dev/null 2>&1; then
+    log "Work provisioning pending: 1Password CLI is not installed"
+    exit 0
+fi
+if ! op vault list >/dev/null 2>&1; then
+    log "Work provisioning pending: authenticate with 'op account add' and 'eval \"$(op signin)\"', then run 'chezmoi apply'"
+    exit 0
+fi
+
+mkdir -p "$HOME/.ssh" "$HOME/.config/zsh"
+chmod 700 "$HOME/.ssh"
+
+key_tmp="$(mktemp)"
+if op read {{ .deployKeyRef | quote }} >"$key_tmp"; then
+    install -m 600 "$key_tmp" "$HOME/.ssh/devconfig"
+else
+    log "Work provisioning pending: could not read the devconfig deploy key"
+fi
+rm -f "$key_tmp"
+
+secrets_tmp="$(mktemp)"
+if jira_token="$(op read {{ .jiraTokenRef | quote }})"; then
+    printf 'export JIRA_TOKEN=%q\n' "$jira_token" >>"$secrets_tmp"
+fi
+{{ if .hfTokenRef -}}
+if hf_token="$(op read {{ .hfTokenRef | quote }})"; then
+    printf 'export HF_TOKEN=%q\n' "$hf_token" >>"$secrets_tmp"
+fi
+{{ end -}}
+if [[ -s "$secrets_tmp" ]]; then
+    install -m 600 "$secrets_tmp" "$HOME/.config/zsh/.work-secrets.zsh"
+fi
+rm -f "$secrets_tmp"
+
+if [[ -f "$HOME/.ssh/devconfig" ]] && [[ ! -d "$HOME/devconfig/.git" ]]; then
+    if ! GIT_SSH_COMMAND="ssh -i $HOME/.ssh/devconfig -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+        git clone git@gitlab.damp.local:niklas.werner/devconfig.git "$HOME/devconfig"; then
+        log "Work provisioning pending: internal GitLab is currently unavailable"
+    fi
+elif [[ -d "$HOME/devconfig/.git" ]]; then
+    git -C "$HOME/devconfig" pull --ff-only || log "Could not update devconfig; continuing"
+fi
+{{ else -}}
+log "Work provisioning pending: enable 1Password in chezmoi config and run 'chezmoi init'"
+{{ end -}}
+{{ end -}}

@@ -1,0 +1,5 @@
+{{- if eq .profile "work" }}
+Host gitlab.damp.local
+    IdentityFile ~/.ssh/devconfig
+    IdentitiesOnly yes
+{{- end }}

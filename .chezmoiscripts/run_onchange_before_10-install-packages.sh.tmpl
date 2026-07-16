@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() {
+    printf '[dotfiles] %s\n' "$*"
+}
+
+{{ if eq .chezmoi.os "darwin" -}}
+if ! command -v brew >/dev/null 2>&1; then
+    log "Installing Homebrew"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+formulae=(
+    bash
+    clang-format
+    cmake
+    curl
+    fzf
+    git
+    jq
+    mise
+    ninja
+    opencode
+    ripgrep
+    shellcheck
+    tmux
+    wget
+    zsh
+)
+brew install "${formulae[@]}"
+
+{{ if eq .role "desktop" -}}
+casks=(
+    1password
+    1password-cli
+    displaylink
+    ghostty
+    google-chrome
+    obs
+    raycast
+    rode-central
+    rode-virtual-channels
+    spotify
+)
+{{ if eq .profile "work" -}}
+casks+=(slack)
+{{ end -}}
+brew install --cask "${casks[@]}"
+
+if ! brew tap | grep -qx 'nikitabobko/tap'; then
+    brew tap nikitabobko/tap
+fi
+brew trust nikitabobko/tap 2>/dev/null || true
+brew install --cask nikitabobko/tap/aerospace
+{{ end -}}
+{{ else if eq .chezmoi.os "linux" -}}
+sudo_cmd=()
+if (( EUID != 0 )); then
+    if ! command -v sudo >/dev/null 2>&1; then
+        printf '[dotfiles] ERROR: sudo is required for package installation\n' >&2
+        exit 1
+    fi
+    sudo_cmd=(sudo)
+fi
+
+case {{ .distro | quote }} in
+    ubuntu|debian)
+        "${sudo_cmd[@]}" apt-get update
+        "${sudo_cmd[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential ca-certificates clang-format cmake curl fzf git gnupg jq \
+            ninja-build ripgrep shellcheck tmux unzip wget zsh
+        ;;
+    fedora)
+        "${sudo_cmd[@]}" dnf install -y \
+            ca-certificates clang-tools-extra cmake curl findutils fzf gcc gcc-c++ \
+            git jq make ninja-build ripgrep ShellCheck tmux unzip wget zsh
+        ;;
+    *)
+        printf '[dotfiles] ERROR: Unsupported Linux distribution: %s\n' {{ .distro | quote }} >&2
+        exit 1
+        ;;
+esac
+
+if ! command -v mise >/dev/null 2>&1; then
+    log "Installing mise"
+    curl -fsSL https://mise.run | sh
+fi
+
+if ! command -v opencode >/dev/null 2>&1; then
+    log "Installing OpenCode"
+    curl -fsSL https://opencode.ai/install | bash
+fi
+
+{{ if and (eq .profile "work") .useOnePassword -}}
+if ! command -v op >/dev/null 2>&1; then
+    log "Installing 1Password CLI"
+    case {{ .distro | quote }} in
+        ubuntu|debian)
+            curl -fsSL https://downloads.1password.com/linux/keys/1password.asc \
+                | gpg --dearmor \
+                | "${sudo_cmd[@]}" tee /usr/share/keyrings/1password-archive-keyring.gpg >/dev/null
+            printf 'deb [arch=%s signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/%s stable main\n' \
+                "$(dpkg --print-architecture)" "$(dpkg --print-architecture)" \
+                | "${sudo_cmd[@]}" tee /etc/apt/sources.list.d/1password.list >/dev/null
+            "${sudo_cmd[@]}" apt-get update
+            "${sudo_cmd[@]}" apt-get install -y 1password-cli
+            ;;
+        fedora)
+            "${sudo_cmd[@]}" rpm --import https://downloads.1password.com/linux/keys/1password.asc
+            "${sudo_cmd[@]}" sh -c 'printf "%s\n" \
+                "[1password]" \
+                "name=1Password Stable Channel" \
+                "baseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch" \
+                "enabled=1" \
+                "gpgcheck=1" \
+                "repo_gpgcheck=1" \
+                "gpgkey=https://downloads.1password.com/linux/keys/1password.asc" \
+                > /etc/yum.repos.d/1password.repo'
+            "${sudo_cmd[@]}" dnf install -y 1password-cli
+            ;;
+    esac
+fi
+{{ end -}}
+{{ end -}}
+
+mise_bin="$(command -v mise || true)"
+[[ -n "$mise_bin" ]] || mise_bin="$HOME/.local/bin/mise"
+if [[ -x "$mise_bin" ]]; then
+    log "Installing mise-managed tools"
+    "$mise_bin" use --global atuin@latest
+    "$mise_bin" use --global delta@latest
+    "$mise_bin" use --global go@latest
+    "$mise_bin" use --global neovim@latest
+    "$mise_bin" use --global node@lts
+    "$mise_bin" use --global python@3.11
+    "$mise_bin" use --global rust@stable
+    "$mise_bin" use --global zoxide@latest
+fi

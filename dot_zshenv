@@ -1,0 +1,20 @@
+# Zsh reads this file for every invocation, including non-interactive shells.
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export ZDOTDIR="${ZDOTDIR:-$XDG_CONFIG_HOME/zsh}"
+
+typeset -gU path fpath
+path=(
+  "$HOME/bin"(N)
+  "$HOME/sbin"(N)
+  "$HOME/.local/bin"(N)
+  "$HOME/.local/sbin"(N)
+  /opt/homebrew/bin(N)
+  /opt/homebrew/sbin(N)
+  /opt/local/bin(N)
+  /opt/local/sbin(N)
+  /usr/local/bin(N)
+  /usr/local/sbin(N)
+  $path
+)

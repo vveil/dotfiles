@@ -1,0 +1,3 @@
+# Antidote compiles the plugin bundle when its source list changes.
+zstyle ':antidote:bundle' file "$ZDOTDIR/.zsh_plugins.txt"
+zstyle ':antidote:bundle' use-friendly-names 'yes'
