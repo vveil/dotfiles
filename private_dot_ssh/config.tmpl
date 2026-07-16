@@ -1,5 +1,27 @@
 {{- if eq .profile "work" }}
+Host RemoteDevelopment
+    HostName {{ .remoteDevelopmentHost }}
+    Port 2230
+    User dev
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    ForwardAgent yes
+    ForwardX11 yes
+    LocalForward 3443 localhost:443
+    LocalForward 35432 localhost:5432
+    LocalForward 35173 localhost:5173
+
+Host LocalDevelopment
+    HostName localhost
+    Port 2222
+    User dev
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    ForwardAgent yes
+
+{{- if .deployKeyRef }}
 Host gitlab.damp.local
     IdentityFile ~/.ssh/devconfig
     IdentitiesOnly yes
+{{- end }}
 {{- end }}

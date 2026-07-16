@@ -20,6 +20,7 @@ Initialization asks for two independent choices:
 
 The operating system and Linux distribution are detected by chezmoi. Personal
 and work profiles are supported on macOS, Ubuntu, and Fedora.
+Work-machine hostnames are stored only in the local chezmoi configuration.
 
 ## Zsh layers
 
@@ -46,7 +47,6 @@ zsh -n ~/.zshenv ~/.config/zsh/.zshrc ~/.config/zsh/.zshrc.d/*.zsh
 
 - macOS: Homebrew CLI tools and the selected desktop applications
 - Ubuntu/Fedora: native CLI packages
-- mise: Neovim, Atuin, delta, Go, Node.js, Python, Rust, and zoxide
+- mise: Neovim, Atuin, delta, Go, Node.js, Python, and zoxide
 - OpenCode: Homebrew on macOS and the official installer on Linux
 - chezmoi externals: Antidote and the Oh My Tmux base configuration
-

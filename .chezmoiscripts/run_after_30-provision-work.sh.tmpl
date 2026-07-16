@@ -19,6 +19,7 @@ fi
 mkdir -p "$HOME/.ssh" "$HOME/.config/zsh"
 chmod 700 "$HOME/.ssh"
 
+{{ if .deployKeyRef -}}
 key_tmp="$(mktemp)"
 if op read {{ .deployKeyRef | quote }} >"$key_tmp"; then
     install -m 600 "$key_tmp" "$HOME/.ssh/devconfig"
@@ -26,6 +27,9 @@ else
     log "Work provisioning pending: could not read the devconfig deploy key"
 fi
 rm -f "$key_tmp"
+{{ else -}}
+log "Work provisioning pending: no devconfig deploy-key reference configured"
+{{ end -}}
 
 secrets_tmp="$(mktemp)"
 if jira_token="$(op read {{ .jiraTokenRef | quote }})"; then
@@ -46,7 +50,7 @@ if [[ -f "$HOME/.ssh/devconfig" ]] && [[ ! -d "$HOME/devconfig/.git" ]]; then
         git clone git@gitlab.damp.local:niklas.werner/devconfig.git "$HOME/devconfig"; then
         log "Work provisioning pending: internal GitLab is currently unavailable"
     fi
-elif [[ -d "$HOME/devconfig/.git" ]]; then
+elif [[ -n {{ .deployKeyRef | quote }} ]] && [[ -d "$HOME/devconfig/.git" ]]; then
     git -C "$HOME/devconfig" pull --ff-only || log "Could not update devconfig; continuing"
 fi
 {{ else -}}

@@ -17,48 +17,63 @@ else
     eval "$(/usr/local/bin/brew shellenv)"
 fi
 
-formulae=(
-    bash
-    clang-format
-    cmake
-    curl
-    fzf
-    git
-    jq
-    mise
-    ninja
-    opencode
-    ripgrep
-    shellcheck
-    tmux
-    wget
-    zsh
+declare -A formula_commands=(
+    [clang-format]=clang-format
+    [cmake]=cmake
+    [fzf]=fzf
+    [git]=git
+    [jq]=jq
+    [mise]=mise
+    [ninja]=ninja
+    [opencode]=opencode
+    [ripgrep]=rg
+    [shellcheck]=shellcheck
+    [tmux]=tmux
+    [wget]=wget
+    [zsh]=zsh
 )
-brew install "${formulae[@]}"
+for formula in "${!formula_commands[@]}"; do
+    command="${formula_commands[$formula]}"
+    if ! command -v "$command" >/dev/null 2>&1; then
+        log "Installing missing command '$command'"
+        brew install "$formula"
+    fi
+done
 
 {{ if eq .role "desktop" -}}
-casks=(
-    1password
-    1password-cli
-    displaylink
-    ghostty
-    google-chrome
-    obs
-    raycast
-    rode-central
-    rode-virtual-channels
-    spotify
-)
+declare -A cask_apps=(
+    [1password]="1Password.app"
+    [displaylink]="DisplayLink Manager.app"
+    [ghostty]="Ghostty.app"
+    [google-chrome]="Google Chrome.app"
+    [obs]="OBS.app"
+    [raycast]="Raycast.app"
+    [rode-central]="RODE Central.app"
+    [rode-virtual-channels]="RODE Virtual Channels.app"
+    [spotify]="Spotify.app"
 {{ if eq .profile "work" -}}
-casks+=(slack)
+    [slack]="Slack.app"
 {{ end -}}
-brew install --cask "${casks[@]}"
+)
+for cask in "${!cask_apps[@]}"; do
+    app="${cask_apps[$cask]}"
+    if [[ ! -d "/Applications/$app" && ! -d "$HOME/Applications/$app" ]]; then
+        log "Installing missing app '$app'"
+        brew install --cask "$cask" || log "Skipping optional cask '$cask'"
+    fi
+done
 
-if ! brew tap | grep -qx 'nikitabobko/tap'; then
-    brew tap nikitabobko/tap
+if ! command -v op >/dev/null 2>&1; then
+    brew install --cask 1password-cli
 fi
-brew trust nikitabobko/tap 2>/dev/null || true
-brew install --cask nikitabobko/tap/aerospace
+
+if [[ ! -d "/Applications/AeroSpace.app" && ! -d "$HOME/Applications/AeroSpace.app" ]]; then
+    if ! brew tap | grep -qx 'nikitabobko/tap'; then
+        brew tap nikitabobko/tap
+    fi
+    brew trust --cask nikitabobko/tap/aerospace 2>/dev/null || true
+    brew install --cask nikitabobko/tap/aerospace || log "Skipping optional cask 'aerospace'"
+fi
 {{ end -}}
 {{ else if eq .chezmoi.os "linux" -}}
 sudo_cmd=()
@@ -70,17 +85,51 @@ if (( EUID != 0 )); then
     sudo_cmd=(sudo)
 fi
 
+packages=()
+add_package() {
+    command -v "$1" >/dev/null 2>&1 || packages+=("$2")
+}
+
 case {{ .distro | quote }} in
     ubuntu|debian)
-        "${sudo_cmd[@]}" apt-get update
-        "${sudo_cmd[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            build-essential ca-certificates clang-format cmake curl fzf git gnupg jq \
-            ninja-build ripgrep shellcheck tmux unzip wget zsh
+        add_package cc build-essential
+        add_package clang-format clang-format
+        add_package cmake cmake
+        add_package curl curl
+        add_package fzf fzf
+        add_package git git
+        add_package gpg gnupg
+        add_package jq jq
+        add_package make build-essential
+        add_package ninja ninja-build
+        add_package rg ripgrep
+        add_package shellcheck shellcheck
+        add_package tmux tmux
+        add_package unzip unzip
+        add_package wget wget
+        add_package zsh zsh
+        if (( ${#packages[@]} )); then
+            "${sudo_cmd[@]}" apt-get update
+            "${sudo_cmd[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
+        fi
         ;;
     fedora)
-        "${sudo_cmd[@]}" dnf install -y \
-            ca-certificates clang-tools-extra cmake curl findutils fzf gcc gcc-c++ \
-            git jq make ninja-build ripgrep ShellCheck tmux unzip wget zsh
+        add_package cc gcc
+        add_package clang-format clang-tools-extra
+        add_package cmake cmake
+        add_package curl curl
+        add_package fzf fzf
+        add_package git git
+        add_package jq jq
+        add_package make make
+        add_package ninja ninja-build
+        add_package rg ripgrep
+        add_package shellcheck ShellCheck
+        add_package tmux tmux
+        add_package unzip unzip
+        add_package wget wget
+        add_package zsh zsh
+        (( ! ${#packages[@]} )) || "${sudo_cmd[@]}" dnf install -y "${packages[@]}"
         ;;
     *)
         printf '[dotfiles] ERROR: Unsupported Linux distribution: %s\n' {{ .distro | quote }} >&2
@@ -133,13 +182,15 @@ fi
 mise_bin="$(command -v mise || true)"
 [[ -n "$mise_bin" ]] || mise_bin="$HOME/.local/bin/mise"
 if [[ -x "$mise_bin" ]]; then
-    log "Installing mise-managed tools"
-    "$mise_bin" use --global atuin@latest
-    "$mise_bin" use --global delta@latest
-    "$mise_bin" use --global go@latest
-    "$mise_bin" use --global neovim@latest
-    "$mise_bin" use --global node@lts
-    "$mise_bin" use --global python@3.11
-    "$mise_bin" use --global rust@stable
-    "$mise_bin" use --global zoxide@latest
+    install_mise_tool() {
+        command -v "$1" >/dev/null 2>&1 || "$mise_bin" use --global "$2"
+    }
+    install_mise_tool atuin atuin@latest
+    install_mise_tool delta delta@latest
+    install_mise_tool go go@latest
+    install_mise_tool nvim neovim@latest
+    install_mise_tool node node@lts
+    install_mise_tool python3 python@3.11
+    install_mise_tool cargo rust@stable
+    install_mise_tool zoxide zoxide@latest
 fi

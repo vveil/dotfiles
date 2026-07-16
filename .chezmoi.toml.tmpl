@@ -10,12 +10,14 @@
 {{- $jiraTokenRef := "" -}}
 {{- $hfTokenRef := "" -}}
 {{- $deployKeyRef := "" -}}
+{{- $remoteDevelopmentHost := "" -}}
 {{- if eq $profile "work" -}}
+{{- $remoteDevelopmentHost = promptStringOnce . "remoteDevelopmentHost" "RemoteDevelopment hostname" -}}
 {{- $useOnePassword = promptBoolOnce . "useOnePassword" "Load work shell secrets from 1Password" -}}
 {{- if $useOnePassword -}}
 {{- $jiraTokenRef = promptStringOnce . "jiraTokenRef" "1Password reference for the Jira token (op://...)" -}}
 {{- $hfTokenRef = promptStringOnce . "hfTokenRef" "1Password reference for the Hugging Face token (op://..., blank to omit)" -}}
-{{- $deployKeyRef = promptStringOnce . "deployKeyRef" "1Password reference for the devconfig SSH deploy key (op://...)" -}}
+{{- $deployKeyRef = promptStringOnce . "deployKeyRef" "1Password reference for the devconfig SSH deploy key (op://..., blank to defer)" -}}
 {{- end -}}
 {{- end -}}
 
@@ -28,6 +30,7 @@
     jiraTokenRef = {{ $jiraTokenRef | quote }}
     hfTokenRef = {{ $hfTokenRef | quote }}
     deployKeyRef = {{ $deployKeyRef | quote }}
+    remoteDevelopmentHost = {{ $remoteDevelopmentHost | quote }}
 {{- if eq .chezmoi.os "linux" }}
     distro = {{ .chezmoi.osRelease.id | quote }}
 {{- else }}
