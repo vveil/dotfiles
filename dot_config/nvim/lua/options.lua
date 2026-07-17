@@ -4,6 +4,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 vim.g.have_nerd_font = true
 vim.g.db_ui_use_nerd_fonts = 1
+vim.g.clipboard = 'osc52'
 
 if vim.fn.executable 'rg' == 0 then
   local mise_rg = vim.fs.joinpath(vim.env.HOME, '.local', 'share', 'mise', 'installs', 'ripgrep', 'latest', 'bin')
@@ -39,4 +40,6 @@ opt.foldmethod = 'indent'
 opt.foldlevel = 99
 opt.diffopt = { 'internal', 'filler', 'closeoff', 'linematch:60' }
 
-vim.schedule(function() opt.clipboard = 'unnamedplus' end)
+vim.schedule(function()
+  vim.o.clipboard = 'unnamedplus'
+end)

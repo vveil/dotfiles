@@ -28,7 +28,17 @@ end
 
 local dap = require 'dap'
 dap.defaults.fallback.switchbuf = 'usevisible,usetab,newtab'
-require('dap.ext.vscode').json_decode = require('json5').parse
+require('dap.ext.vscode').json_decode = function(json)
+  local launch = require('json5').parse(json)
+  for _, input in ipairs(launch.inputs or {}) do
+    if input.type == 'command' and input.command == 'memento.promptString' then
+      input.type = 'promptString'
+      input.description = input.args.description
+      input.default = input.args.default
+    end
+  end
+  return launch
+end
 dap.adapters.codelldb = { type = 'executable', command = 'codelldb' }
 dap.adapters.lldb = { type = 'executable', command = 'codelldb' }
 dap.listeners.on_config.local_lldb_formatters = function(config)
