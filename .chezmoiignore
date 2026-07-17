@@ -4,6 +4,8 @@ bootstrap
 README.md
 .github/**
 .config/nvim/.github/**
+.config/nvim/.git/**
+.config/nvim/**/__pycache__/**
 {{- if or (ne .profile "work") (ne .role "desktop") }}
 .ssh/config
 {{- end }}

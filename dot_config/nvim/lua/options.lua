@@ -5,6 +5,11 @@ vim.g.maplocalleader = ' '
 vim.g.have_nerd_font = true
 vim.g.db_ui_use_nerd_fonts = 1
 
+if vim.fn.executable 'rg' == 0 then
+  local mise_rg = vim.fs.joinpath(vim.env.HOME, '.local', 'share', 'mise', 'installs', 'ripgrep', 'latest', 'bin')
+  if vim.uv.fs_stat(vim.fs.joinpath(mise_rg, 'rg')) then vim.env.PATH = mise_rg .. ':' .. (vim.env.PATH or '') end
+end
+
 local opt = vim.opt
 opt.termguicolors = true
 opt.number = true
