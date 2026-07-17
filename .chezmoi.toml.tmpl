@@ -11,8 +11,10 @@
 {{- $hfTokenRef := "" -}}
 {{- $deployKeyRef := "" -}}
 {{- $remoteDevelopmentHost := "" -}}
-{{- if eq $profile "work" -}}
+{{- if and (eq $profile "work") (eq $role "desktop") -}}
 {{- $remoteDevelopmentHost = promptStringOnce . "remoteDevelopmentHost" "RemoteDevelopment hostname" -}}
+{{- end -}}
+{{- if eq $profile "work" -}}
 {{- $useOnePassword = promptBoolOnce . "useOnePassword" "Load work shell secrets from 1Password" -}}
 {{- if $useOnePassword -}}
 {{- $jiraTokenRef = promptStringOnce . "jiraTokenRef" "1Password reference for the Jira token (op://...)" -}}

@@ -4,7 +4,7 @@ bootstrap
 README.md
 .github/**
 .config/nvim/.github/**
-{{- if ne .profile "work" }}
+{{- if or (ne .profile "work") (ne .role "desktop") }}
 .ssh/config
 {{- end }}
 
