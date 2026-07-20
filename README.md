@@ -47,6 +47,6 @@ zsh -n ~/.zshenv ~/.config/zsh/.zshrc ~/.config/zsh/.zshrc.d/*.zsh
 
 - macOS: Homebrew CLI tools and the selected desktop applications
 - Ubuntu/Fedora: native CLI packages
-- mise: Neovim, Atuin, delta, Go, Node.js, Python, and zoxide
+- mise: Atuin, delta, Go, Node.js, Python, Rust, zoxide, and Neovim outside containers
 - OpenCode: Homebrew on macOS and the official installer on Linux
 - chezmoi externals: Antidote and the Oh My Tmux base configuration

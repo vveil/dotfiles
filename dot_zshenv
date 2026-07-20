@@ -10,6 +10,7 @@ path=(
   "$HOME/sbin"(N)
   "$HOME/.local/bin"(N)
   "$HOME/.local/sbin"(N)
+  "$HOME/.opencode/bin"(N)
   /opt/homebrew/bin(N)
   /opt/homebrew/sbin(N)
   /opt/local/bin(N)

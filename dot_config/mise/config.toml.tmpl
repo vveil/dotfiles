@@ -2,7 +2,10 @@
 atuin = "latest"
 delta = "latest"
 go = "latest"
+{{- if ne .role "container" }}
 neovim = "latest"
+{{- end }}
 node = "latest"
 python = "3.11"
+rust = "stable"
 zoxide = "latest"

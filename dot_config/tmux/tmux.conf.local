@@ -384,6 +384,7 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # -- user customizations -------------------------------------------------------
 
 # this is the place to override or undo settings
+set -s set-clipboard on
 
 # increase history size
 #set -g history-limit 100000
