@@ -27,7 +27,37 @@ for name, sign in pairs {
 end
 
 local dap = require 'dap'
-dap.defaults.fallback.switchbuf = 'usevisible,usetab,newtab'
+local function find_code_window(bufnr)
+  local windows = vim.api.nvim_tabpage_list_wins(0)
+  local function usable(win)
+    local buf = vim.api.nvim_win_get_buf(win)
+    return vim.api.nvim_win_get_config(win).relative == '' and not vim.wo[win].winfixbuf and vim.bo[buf].buftype == ''
+  end
+
+  for _, win in ipairs(windows) do
+    if usable(win) and vim.api.nvim_win_get_buf(win) == bufnr then return win end
+  end
+
+  local current = vim.api.nvim_get_current_win()
+  if usable(current) then return current end
+
+  local previous_number = vim.fn.winnr '#'
+  local previous = previous_number > 0 and vim.fn.win_getid(previous_number) or 0
+  if previous ~= 0 and usable(previous) then return previous end
+
+  for _, win in ipairs(windows) do
+    if usable(win) then return win end
+  end
+end
+
+dap.defaults.fallback.switchbuf = function(bufnr, line, column)
+  local win = find_code_window(bufnr)
+  if not win then return end
+  vim.api.nvim_win_set_buf(win, bufnr)
+  vim.api.nvim_win_set_cursor(win, { line, math.max(column - 1, 0) })
+  vim.api.nvim_set_current_win(win)
+  vim.api.nvim_win_call(win, function() vim.cmd 'normal! zv' end)
+end
 require('dap.ext.vscode').json_decode = function(json)
   local launch = require('json5').parse(json)
   for _, input in ipairs(launch.inputs or {}) do
@@ -50,7 +80,7 @@ dap.listeners.on_config.local_lldb_formatters = function(config)
   return config
 end
 
-require('dap-view').setup { auto_toggle = true }
+require('dap-view').setup { auto_toggle = true, switchbuf = find_code_window }
 require('mason-nvim-dap').setup { automatic_installation = false, ensure_installed = { 'codelldb' } }
 
 vim.keymap.set('n', '<leader>dt', dap.terminate, { desc = '[D]AP [T]erminate' })
